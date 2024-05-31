@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="Weather forecasts for your local area">
+  <title>WeatherApp | Simple weather forecasts</title>
+</head>
+<body>
+<h1>Enter Your Location</h1>
+<form id="locationForm" method="get" action="/api/location/">
+  <label for="location">Location</label>
+  <input type="text" id="location" name="location" required>
+  <button type="submit">Get Weather Data</button>
+</form>
+
+<script>
+  document.getElementById('locationForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const location = document.getElementById('location').value;
+    window.location.href = `/api/location/${location}`;
+  });
+</script>
+</body>
+</html>
