@@ -6,23 +6,24 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-public class WeatherInfo {
+@Table(name = "weather", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"city", "time"})
+})
+public class Weather {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "location_id")
-    private Location location;
-
-    private Date date;
+    private String city;
+    private Long time;
     private Double temperature;
-    private Double precipitation;
-    private Double humidity;
+    private Integer humidity;
+    private Double windSpeed;
+    private Integer windDirection;
+    private String location;
+    private String icon; // Add this line
 }
