@@ -1,8 +1,8 @@
 package com.CPS.web.observerpattern;
 
 
-import com.CPS.web.dto.WeatherDTO;
+import com.CPS.web.dto.DTO;
 
 public interface Observer {
-    void update(WeatherDTO weatherData);
+    void update(DTO weatherData);
 }

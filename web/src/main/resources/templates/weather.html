@@ -2,98 +2,124 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Weather Data</title>
+    <title>City Weather Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
     <style>
         body {
-            background: linear-gradient(to bottom, #001f3f, #001f3f, #004080);
-            color: #ffffff;
-            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            color: #333333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
+            justify-content: flex-start;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
         h1 {
-            margin: 50px 0 30px 0;
-            font-size: 2.25em;
+            margin: 20px 0;
+            font-size: 2.5em;
+            color: #007BFF;
         }
         #inputContainer {
             display: flex;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         #cityInput {
             font-size: 1em;
-            padding: 8px;
+            padding: 10px;
             margin-right: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
         }
-        button {
+        #updateButton {
             font-size: 1em;
-            padding: 8px 16px;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #updateButton:hover {
+            background-color: #0056b3;
+        }
+        #contentContainer {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
         }
         #weatherChart {
+            width: 60%;
             max-width: 800px;
-            max-height: 400px;
             margin-bottom: 30px;
         }
         .weather-details {
-            margin-top: 20px;
-            font-size: 1.2em;
-            background-color: #00264d;
+            width: 35%;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
             padding: 20px;
-            border-radius: 8px;
+            margin-left: 20px;
         }
         .weather-details table {
             width: 100%;
+            border-collapse: collapse;
         }
         .weather-details th, .weather-details td {
             text-align: left;
-            padding: 8px;
+            padding: 10px;
+            border-bottom: 1px solid #dddddd;
         }
         .weather-details th {
-            font-size: 1.2em;
-            text-align: center;
+            background-color: #f8f9fa;
+        }
+        .weather-details img {
+            max-width: 50px;
         }
     </style>
 </head>
 <body>
-<h1>Weather Data for <span id="cityName"></span></h1>
+<h1>City Weather Dashboard</h1>
 <div id="inputContainer">
-    <input type="text" id="cityInput" placeholder="Enter city" />
-    <button onclick="changeCity()">Change City</button>
+    <input type="text" id="cityInput" placeholder="Enter city name" />
+    <button id="updateButton" onclick="updateCity()">Update Weather</button>
 </div>
-<canvas id="weatherChart" width="600" height="300"></canvas>
-<div class="weather-details">
-    <table>
-        <thead>
-        <tr>
-            <th colspan="2">Current Extra Weather Data</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>Current Humidity:</td>
-            <td><span id="humidity"></span>%</td>
-        </tr>
-        <tr>
-            <td>Current Wind Speed:</td>
-            <td><span id="windSpeed"></span> m/s</td>
-        </tr>
-        <tr>
-            <td>Current Wind Direction:</td>
-            <td><span id="windDirection"></span></td>
-        </tr>
-        <tr>
-            <td>Current Weather:</td>
-            <td><img id="weatherIcon" src="" alt="Weather Icon"></td>
-        </tr>
-        </tbody>
-    </table>
+<div id="contentContainer">
+    <canvas id="weatherChart"></canvas>
+    <div class="weather-details">
+        <table>
+            <thead>
+            <tr>
+                <th colspan="2">Latest Weather Details</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Humidity:</td>
+                <td><span id="humidity"></span>%</td>
+            </tr>
+            <tr>
+                <td>Wind Speed:</td>
+                <td><span id="windSpeed"></span> m/s</td>
+            </tr>
+            <tr>
+                <td>Wind Direction:</td>
+                <td><span id="windDirection"></span></td>
+            </tr>
+            <tr>
+                <td>Weather:</td>
+                <td><img id="weatherIcon" src="" alt="Weather Icon"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 <script>
     let stompClient = null;
@@ -102,8 +128,7 @@
     document.addEventListener("DOMContentLoaded", function() {
         const urlParams = new URLSearchParams(window.location.search);
         city = urlParams.get('city') || city;
-        document.getElementById("cityName").textContent = city;
-        document.getElementById('cityInput').value = city;
+        document.getElementById("cityInput").value = city;
         connect();
         fetchWeatherData(city).then(data => renderChart(data));
     });
@@ -120,11 +145,10 @@
         });
     }
 
-    function changeCity() {
+    function updateCity() {
         const newCity = document.getElementById('cityInput').value;
         if (newCity && newCity !== city) {
             city = newCity;
-            document.getElementById("cityName").textContent = city;
             if (stompClient) {
                 stompClient.disconnect(() => {
                     connect();
@@ -159,18 +183,18 @@
                 datasets: [{
                     label: 'Temperature (°C)',
                     data: temperatures,
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderWidth: 1
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                    borderWidth: 2
                 }]
             },
             options: {
                 plugins: {
                     legend: {
                         labels: {
-                            color: '#FFFFFF',
+                            color: '#333333',
                             font: {
-                                size: 18
+                                size: 14
                             }
                         }
                     }
@@ -181,19 +205,19 @@
                         title: {
                             display: true,
                             text: 'Time',
-                            color: '#FFFFFF',
-                            font: {
-                                size: 18
-                            }
-                        },
-                        ticks: {
-                            color: '#FFFFFF',
+                            color: '#333333',
                             font: {
                                 size: 14
                             }
                         },
+                        ticks: {
+                            color: '#333333',
+                            font: {
+                                size: 12
+                            }
+                        },
                         grid: {
-                            color: 'rgba(255, 255, 255, 0.2)'
+                            color: 'rgba(0, 0, 0, 0.1)'
                         }
                     },
                     y: {
@@ -201,19 +225,19 @@
                         title: {
                             display: true,
                             text: 'Temperature (°C)',
-                            color: '#FFFFFF',
-                            font: {
-                                size: 18
-                            }
-                        },
-                        ticks: {
-                            color: '#FFFFFF',
+                            color: '#333333',
                             font: {
                                 size: 14
                             }
                         },
+                        ticks: {
+                            color: '#333333',
+                            font: {
+                                size: 12
+                            }
+                        },
                         grid: {
-                            color: 'rgba(255, 255, 255, 0.2)'
+                            color: 'rgba(0, 0, 0, 0.1)'
                         }
                     }
                 }
@@ -245,7 +269,7 @@
     }
 
     function getWindDirection(degree) {
-        const directions = ['NORTH', 'NORTH-EAST', 'EAST', 'SOUTH-EAST', 'SOUTH', 'SOUTH-WEST', 'WEST', 'NORTH-WEST'];
+        const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
         const index = Math.round((degree % 360) / 45) % 8;
         return directions[index];
     }
