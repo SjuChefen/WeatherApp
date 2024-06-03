@@ -1,14 +1,14 @@
 package com.CPS.web.controllers;
 
-import com.CPS.web.dto.DTO;
+import com.CPS.web.exceptions.CityNotFoundException;
 import com.CPS.web.services.IService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.List;
 
 @org.springframework.stereotype.Controller
 public class Controller {
@@ -21,10 +21,13 @@ public class Controller {
 
     @GetMapping("/api/weather")
     @ResponseBody
-    public List<DTO> getWeatherData(@RequestParam String city) {
-        service.fetchAndSaveCityWeather(city);
-
-        return service.getWeather(city);
+    public ResponseEntity<?> getWeatherData(@RequestParam String city) {
+        try {
+            service.fetchAndSaveCityWeather(city);
+            return ResponseEntity.ok(service.getWeather(city));
+        } catch (CityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @GetMapping("/weather")

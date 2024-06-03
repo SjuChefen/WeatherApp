@@ -1,5 +1,6 @@
 package com.CPS.web.services.impl;
 
+import com.CPS.web.exceptions.CityNotFoundException;
 import com.CPS.web.dto.DTO;
 import com.CPS.web.event.WeatherUpdateEvent;
 import com.CPS.web.models.Weather;
@@ -41,12 +42,19 @@ public class ServiceImpl implements IService {
     public synchronized void fetchAndSaveCityWeather(String cityName) {
         String url = String.format(apiURL, cityName, apiKey);
         RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.getForObject(url, String.class);
+        String response;
+        try {
+            response = restTemplate.getForObject(url, String.class);
+        } catch (Exception e) {
+            LOGGER.error("Error fetching weather data for city: {}", cityName);
+            throw new CityNotFoundException(cityName + " not found. Check spelling or try another city.");
+        }
 
         if (response != null) {
             processWeatherResponse(response, cityName);
         } else {
             LOGGER.error("No response received for city: {}", cityName);
+            throw new CityNotFoundException("No response received for city: " + cityName);
         }
     }
 

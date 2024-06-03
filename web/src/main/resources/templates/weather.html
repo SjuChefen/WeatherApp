@@ -83,6 +83,12 @@
         .weather-details img {
             max-width: 50px;
         }
+        #errorMessage {
+            color: red;
+            margin-top: 20px;
+            font-size: 1em;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -121,6 +127,7 @@
         </table>
     </div>
 </div>
+<div id="errorMessage"></div>
 <script>
     let stompClient = null;
     let city = 'Odense';
@@ -130,7 +137,11 @@
         city = urlParams.get('city') || city;
         document.getElementById("cityInput").value = city;
         connect();
-        fetchWeatherData(city).then(data => renderChart(data));
+        fetchWeatherData(city).then(data => {
+            if (data) {
+                renderChart(data);
+            }
+        });
     });
 
     function connect() {
@@ -161,7 +172,15 @@
                 if (stompClient) {
                     stompClient.disconnect(() => {
                         connect();
-                        fetchWeatherData(city).then(data => renderChart(data));
+                        fetchWeatherData(city).then(data => {
+                            if (data) {
+                                renderChart(data);
+                                document.getElementById('errorMessage').style.display = 'none';
+                            }
+                        }).catch(error => {
+                            document.getElementById('errorMessage').textContent = error.message;
+                            document.getElementById('errorMessage').style.display = 'block';
+                        });
                     });
                 }
                 const newUrl = `${window.location.origin}${window.location.pathname}?city=${city}`;
@@ -171,9 +190,17 @@
     }
 
     async function fetchWeatherData(city) {
-        const response = await fetch('/api/weather?city=' + city);
-        const data = await response.json();
-        return data;
+        try {
+            const response = await fetch('/api/weather?city=' + city);
+            if (!response.ok) {
+                throw new Error(await response.text());
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching weather data:', error);
+            throw error;
+        }
     }
 
     let weatherChart;
@@ -256,6 +283,7 @@
 
         updateWeatherDetails(data);
     }
+
     function updateChart(data) {
         if (!weatherChart) return;
         const times = data.map(d => new Date(d.time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
