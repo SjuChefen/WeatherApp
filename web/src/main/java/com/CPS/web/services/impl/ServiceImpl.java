@@ -4,13 +4,14 @@ import com.CPS.web.dto.DTO;
 import com.CPS.web.event.WeatherUpdateEvent;
 import com.CPS.web.models.Weather;
 import com.CPS.web.repository.WeatherRepository;
-import com.CPS.web.services.Service;
+import com.CPS.web.services.IService;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -18,8 +19,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-@org.springframework.stereotype.Service
-public class ServiceImpl implements Service {
+@Service
+public class ServiceImpl implements IService {
 
     private final WeatherRepository weatherRepository;
     private final String apiKey;
@@ -37,27 +38,33 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public synchronized void fetchAndSaveWeather(String cityName) {
+    public synchronized void fetchAndSaveCityWeather(String cityName) {
+        currentCity.set(cityName);
+        String url = String.format(apiURL, cityName, apiKey);
+        RestTemplate restTemplate = new RestTemplate();
+        String response = restTemplate.getForObject(url, String.class);
+
+        if (response != null) {
+            processWeatherResponse(response, cityName);
+        } else {
+            LOGGER.error("No response received for city: {}", cityName);
+        }
+    }
+
+    private void processWeatherResponse(String response, String cityName) {
         try {
-            currentCity.set(cityName);
-            String url = String.format(apiURL, cityName, apiKey);
-            RestTemplate restTemplate = new RestTemplate();
-            String response = restTemplate.getForObject(url, String.class);
+            JSONObject weatherData = new JSONObject(response);
+            Weather weatherRecord = extractWeatherData(weatherData, cityName);
 
-            if (response != null) {
-                JSONObject weatherData = new JSONObject(response);
-                Weather weatherRecord = extractWeatherData(weatherData, cityName);
-
-                if (weatherRecord != null && !isDuplicateWeatherData(weatherRecord)) {
-                    weatherRepository.save(weatherRecord);
-                    LOGGER.info("Weather data saved for {} at {}", cityName, weatherRecord.getTime());
-                    eventPublisher.publishEvent(new WeatherUpdateEvent(this, convertToWeatherDTO(weatherRecord)));
-                } else {
-                    LOGGER.info("Duplicate weather data for {} at {}, skipping save.", cityName, weatherRecord.getTime());
-                }
+            if (weatherRecord != null && !isDuplicateWeatherData(weatherRecord)) {
+                weatherRepository.save(weatherRecord);
+                LOGGER.info("Weather data saved for {} at {}", cityName, weatherRecord.getTime());
+                eventPublisher.publishEvent(new WeatherUpdateEvent(this, convertToWeatherDTO(weatherRecord)));
+            } else {
+                LOGGER.info("Duplicate weather data for {} at {}, skipping save.", cityName, weatherRecord.getTime());
             }
         } catch (Exception e) {
-            LOGGER.error("Error fetching weather data for {}: {}", cityName, e.getMessage());
+            LOGGER.error("Error processing weather data for {}: {}", cityName, e.getMessage());
         }
     }
 

@@ -1,7 +1,7 @@
 package com.CPS.web.controllers;
 
 import com.CPS.web.dto.DTO;
-import com.CPS.web.services.Service;
+import com.CPS.web.services.IService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,17 +12,17 @@ import java.util.List;
 
 @org.springframework.stereotype.Controller
 public class Controller {
-    private final Service service;
+    private final IService service;
 
     @Autowired
-    public Controller(Service service) {
+    public Controller(IService service) {
         this.service = service;
     }
 
     @GetMapping("/api/weather")
     @ResponseBody
     public List<DTO> getWeatherData(@RequestParam String city) {
-        service.fetchAndSaveWeather(city);
+        service.fetchAndSaveCityWeather(city);
 
         return service.getWeather(city);
     }
