@@ -1,9 +1,8 @@
 package com.CPS.web.services.impl;
 
 import com.CPS.web.dto.DTO;
+import com.CPS.web.event.WeatherUpdateEvent;
 import com.CPS.web.models.Weather;
-import com.CPS.web.observerpattern.Observer;
-import com.CPS.web.observerpattern.Subject;
 import com.CPS.web.repository.WeatherRepository;
 import com.CPS.web.services.Service;
 import org.json.JSONObject;
@@ -11,29 +10,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
-public class ServiceImpl implements Service, Subject {
+public class ServiceImpl implements Service {
 
     private final WeatherRepository weatherRepository;
     private final String apiKey;
     private final String apiURL;
     private final AtomicReference<String> currentCity = new AtomicReference<>("Odense");
-    private final List<Observer> observers = new ArrayList<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceImpl.class);
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public ServiceImpl(WeatherRepository weatherRepository, @Value("${weather.api.key}") String apiKey, @Value("${weather.api.url}") String apiUrl) {
+    public ServiceImpl(WeatherRepository weatherRepository, @Value("${weather.api.key}") String apiKey, @Value("${weather.api.url}") String apiUrl, ApplicationEventPublisher eventPublisher) {
         this.weatherRepository = weatherRepository;
         this.apiKey = apiKey;
-        this.apiURL= apiUrl;
+        this.apiURL = apiUrl;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -51,7 +51,7 @@ public class ServiceImpl implements Service, Subject {
                 if (weatherRecord != null && !isDuplicateWeatherData(weatherRecord)) {
                     weatherRepository.save(weatherRecord);
                     LOGGER.info("Weather data saved for {} at {}", cityName, weatherRecord.getTime());
-                    notifyObservers(convertToWeatherDTO(weatherRecord));
+                    eventPublisher.publishEvent(new WeatherUpdateEvent(this, convertToWeatherDTO(weatherRecord)));
                 } else {
                     LOGGER.info("Duplicate weather data for {} at {}, skipping save.", cityName, weatherRecord.getTime());
                 }
@@ -121,10 +121,5 @@ public class ServiceImpl implements Service, Subject {
 
     public String getCurrentCity() {
         return currentCity.get();
-    }
-
-    @Override
-    public void notifyObservers(DTO DTO) {
-        observers.forEach(observer -> observer.update(DTO));
     }
 }
