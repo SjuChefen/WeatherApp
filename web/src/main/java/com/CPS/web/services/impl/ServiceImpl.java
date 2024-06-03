@@ -55,10 +55,10 @@ public class ServiceImpl implements IService {
             JSONObject weatherData = new JSONObject(response);
             Weather weatherRecord = extractWeatherData(weatherData, cityName);
 
-            if (weatherRecord != null && !isDuplicateWeatherData(weatherRecord)) {
+            if (weatherRecord != null && !isUpToDate(weatherRecord)) {
                 weatherRepository.save(weatherRecord);
                 LOGGER.info("Weather data saved for {} at {}", cityName, weatherRecord.getTime());
-                eventPublisher.publishEvent(new WeatherUpdateEvent(this, convertToWeatherDTO(weatherRecord)));
+                eventPublisher.publishEvent(new WeatherUpdateEvent(this, convertToDTO(weatherRecord)));
             } else {
                 LOGGER.info("Duplicate weather data for {} at {}, skipping save.", cityName, weatherRecord.getTime());
             }
@@ -95,12 +95,12 @@ public class ServiceImpl implements IService {
         }
     }
 
-    private boolean isDuplicateWeatherData(Weather weatherRecord) {
+    private boolean isUpToDate(Weather weatherRecord) {
         Optional<Weather> existingWeather = weatherRepository.findByCityAndTime(weatherRecord.getCity(), weatherRecord.getTime());
-        return existingWeather.isPresent() && isIdenticalWeatherData(existingWeather.get(), weatherRecord);
+        return existingWeather.isPresent() && isDataPresent(existingWeather.get(), weatherRecord);
     }
 
-    private boolean isIdenticalWeatherData(Weather existingWeather, Weather newWeather) {
+    private boolean isDataPresent(Weather existingWeather, Weather newWeather) {
         return existingWeather.getTemperature().equals(newWeather.getTemperature())
                 && existingWeather.getHumidity().equals(newWeather.getHumidity())
                 && existingWeather.getWindSpeed().equals(newWeather.getWindSpeed())
@@ -110,11 +110,11 @@ public class ServiceImpl implements IService {
     @Override
     public List<DTO> getWeather(String cityName) {
         return weatherRepository.findByCity(cityName).stream()
-                .map(this::convertToWeatherDTO)
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    private DTO convertToWeatherDTO(Weather weather) {
+    private DTO convertToDTO(Weather weather) {
         return DTO.builder()
                 .city(weather.getCity())
                 .time(weather.getTime())
