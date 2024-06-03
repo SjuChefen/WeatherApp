@@ -135,7 +135,7 @@
 
     function connect() {
         if (stompClient && stompClient.connected) {
-            stompClient.disconnect();
+            return;
         }
         const socket = new SockJS('/weather-websocket');
         stompClient = Stomp.over(socket);
@@ -151,19 +151,23 @@
         });
     }
 
+    let updateCityTimeout;
     function updateCity() {
-        const newCity = document.getElementById('cityInput').value;
-        if (newCity && newCity !== city) {
-            city = newCity;
-            if (stompClient) {
-                stompClient.disconnect(() => {
-                    connect();
-                    fetchWeatherData(city).then(data => renderChart(data));
-                });
+        clearTimeout(updateCityTimeout);
+        updateCityTimeout = setTimeout(() => {
+            const newCity = document.getElementById('cityInput').value;
+            if (newCity && newCity !== city) {
+                city = newCity;
+                if (stompClient) {
+                    stompClient.disconnect(() => {
+                        connect();
+                        fetchWeatherData(city).then(data => renderChart(data));
+                    });
+                }
+                const newUrl = `${window.location.origin}${window.location.pathname}?city=${city}`;
+                window.history.pushState({ path: newUrl }, '', newUrl);
             }
-            const newUrl = `${window.location.origin}${window.location.pathname}?city=${city}`;
-            window.history.pushState({ path: newUrl }, '', newUrl);
-        }
+        }, 500);
     }
 
     async function fetchWeatherData(city) {
@@ -252,8 +256,8 @@
 
         updateWeatherDetails(data);
     }
-
     function updateChart(data) {
+        if (!weatherChart) return;
         const times = data.map(d => new Date(d.time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
         const temperatures = data.map(d => d.temperature);
 

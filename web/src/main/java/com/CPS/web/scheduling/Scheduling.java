@@ -21,7 +21,7 @@ public class Scheduling {
 
     @Scheduled(fixedRateString = "${weather.update.rate:60000}")
     public void fetchWeatherData() {
-        String city = weatherService.getCurrentCity();
+        String city = "Odense"; // Default or retrieve dynamically
         weatherService.fetchAndSaveCityWeather(city);
         List<DTO> weatherData = weatherService.getWeather(city);
         template.convertAndSend("/topic/weather/" + city, weatherData);

@@ -39,7 +39,6 @@ public class ServiceImpl implements IService {
 
     @Override
     public synchronized void fetchAndSaveCityWeather(String cityName) {
-        currentCity.set(cityName);
         String url = String.format(apiURL, cityName, apiKey);
         RestTemplate restTemplate = new RestTemplate();
         String response = restTemplate.getForObject(url, String.class);
@@ -71,10 +70,12 @@ public class ServiceImpl implements IService {
     private Weather extractWeatherData(JSONObject weatherData, String cityName) {
         try {
             long timestamp = weatherData.getLong("dt");
-            double temperature = weatherData.getJSONObject("main").getDouble("temp");
-            int humidity = weatherData.getJSONObject("main").getInt("humidity");
-            double windSpeed = weatherData.getJSONObject("wind").getDouble("speed");
-            int windDirection = weatherData.getJSONObject("wind").getInt("deg");
+            JSONObject main = weatherData.getJSONObject("main");
+            double temperature = main.getDouble("temp");
+            int humidity = main.getInt("humidity");
+            JSONObject wind = weatherData.getJSONObject("wind");
+            double windSpeed = wind.getDouble("speed");
+            int windDirection = wind.getInt("deg");
             String locationName = weatherData.getString("name");
             String weatherIcon = weatherData.getJSONArray("weather").getJSONObject(0).getString("icon");
 
