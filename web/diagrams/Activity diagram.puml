@@ -1,0 +1,32 @@
+@startuml
+|ServiceImpl|
+start
+:Input cityName;
+
+:Format API URL;
+:Call Rest API to fetch weather data;
+
+|RestTemplate|
+:Check if response is null;
+if (Response is null?) then (yes)
+    :Throw CityNotFoundException;
+else (no)
+    :Process weather data;
+    :Check if weather data is valid;
+    if (Weather data is valid?) then (yes)
+        :Extract weather data;
+        :Check if data is up-to-date;
+        if (Data is up-to-date?) then (no)
+            :Save weather data to repository;
+            :Log info "Weather data saved";
+            :Publish WeatherUpdateEvent;
+        else (yes)
+            :Log info "Duplicate weather data, skipping save";
+        endif
+    else (no)
+        :Log error "Error processing weather data";
+    endif
+endif
+
+stop
+@enduml

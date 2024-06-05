@@ -1,0 +1,34 @@
+@startuml
+participant "Scheduling" as S
+participant "ServiceImpl" as SI
+participant "RestTemplate" as RT
+participant "WeatherRepository" as WR
+participant "ApplicationEventPublisher" as AEP
+participant "SimpMessagingTemplate" as SMT
+
+S -> SI: fetchWeatherData()
+SI -> RT: getForObject(apiURL, String.class)
+RT --> SI: response
+
+alt response is null
+    SI -> S: Throw CityNotFoundException
+else response is valid
+    SI -> SI: processWeatherResponse(response, city)
+    alt weather data is valid
+        SI -> SI: extractWeatherData(response, city)
+        SI -> WR: findByCityAndTime(city, time)
+        alt data is up-to-date
+            SI -> SI: Log info "Duplicate weather data, skipping save"
+        else new data
+            SI -> WR: save(weatherRecord)
+            SI -> SI: Log info "Weather data saved"
+            SI -> AEP: publishEvent(new WeatherUpdateEvent)
+        end
+    else invalid weather data
+        SI -> SI: Log error "Error processing weather data"
+    end
+end
+
+AEP -> SMT: convertAndSend("/topic/weather/" + city, weatherData)
+
+@enduml
