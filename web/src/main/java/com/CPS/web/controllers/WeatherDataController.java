@@ -5,17 +5,18 @@ import com.CPS.web.services.IService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@org.springframework.stereotype.Controller
-public class Controller {
+@Controller
+public class WeatherDataController {
     private final IService service;
 
     @Autowired
-    public Controller(IService service) {
+    public WeatherDataController(IService service) {
         this.service = service;
     }
 
@@ -33,6 +34,6 @@ public class Controller {
     @GetMapping("/weather")
     public String getWeatherPage(@RequestParam String city, Model model) {
         model.addAttribute("city", city);
-        return "weather";
+        return "index";
     }
 }

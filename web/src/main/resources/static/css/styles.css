@@ -1,0 +1,82 @@
+body {
+    background: #f0f4f8;
+    color: #333333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+h1 {
+    margin: 20px 0;
+    font-size: 2.5em;
+    color: #007BFF;
+}
+#inputContainer {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+#cityInput {
+    font-size: 1em;
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+#updateButton {
+    font-size: 1em;
+    padding: 10px 15px;
+    background-color: #007BFF;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+#updateButton:hover {
+    background-color: #0056b3;
+}
+#contentContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+}
+#weatherChart {
+    width: 60%;
+    max-width: 800px;
+    margin-bottom: 30px;
+}
+.weather-details {
+    width: 35%;
+    background-color: #ffffff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    margin-left: 20px;
+}
+.weather-details table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.weather-details th, .weather-details td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid #dddddd;
+}
+.weather-details th {
+    background-color: #f8f9fa;
+}
+.weather-details img {
+    max-width: 50px;
+}
+#errorMessage {
+    color: red;
+    margin-top: 20px;
+    font-size: 1em;
+    display: none;
+}

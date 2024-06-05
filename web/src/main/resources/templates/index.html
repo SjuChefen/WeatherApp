@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>City Weather Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+</head>
+<body>
+<h1>City Weather Dashboard</h1>
+<div id="inputContainer">
+    <input type="text" id="cityInput" placeholder="Enter city name" />
+    <button id="updateButton" onclick="updateCity()">Update Weather</button>
+</div>
+<div id="contentContainer">
+    <canvas id="weatherChart"></canvas>
+    <div class="weather-details">
+        <table>
+            <thead>
+            <tr>
+                <th colspan="2">Latest Weather Details</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Humidity:</td>
+                <td><span id="humidity"></span>%</td>
+            </tr>
+            <tr>
+                <td>Wind Speed:</td>
+                <td><span id="windSpeed"></span> m/s</td>
+            </tr>
+            <tr>
+                <td>Wind Direction:</td>
+                <td><span id="windDirection"></span></td>
+            </tr>
+            <tr>
+                <td>Weather:</td>
+                <td><img id="weatherIcon" src="" alt="Weather Icon"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div id="errorMessage"></div>
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>
