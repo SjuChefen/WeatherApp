@@ -4,6 +4,7 @@ package com.CPS.web.scheduling;
 import com.CPS.web.dto.DTO;
 import com.CPS.web.services.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,10 @@ public class Scheduling {
     @Autowired
     private SimpMessagingTemplate template;
 
-    @Scheduled(fixedRateString = "${weather.update.rate:60000}")
+    @Value("${weather.update.rate}")
+    private String weatherUpdateRate;
+
+    @Scheduled(fixedRateString = "weather.update.rate")
     public void fetchWeatherData() {
         String city = "Odense"; // Default or retrieve dynamically
         weatherService.fetchAndSaveCityWeather(city);
