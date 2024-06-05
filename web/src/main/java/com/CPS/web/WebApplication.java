@@ -9,21 +9,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-public class WebApplication implements CommandLineRunner {
+public class WebApplication {
 
 	@Autowired
 	private ServiceImpl weatherService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(WebApplication.class, args);
-	}
-
-	@Override
-	public void run(String... args) throws Exception {
-		 //Call the fetchAndSaveWeather method with a sample city
-		//weatherService.fetchAndSaveWeather("Odense");
-		 //Print a message to indicate the method has been called
-		//System.out.println("Weather data fetched and saved for Odense.");
-
 	}
 }
