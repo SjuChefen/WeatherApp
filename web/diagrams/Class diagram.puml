@@ -1,23 +1,17 @@
 @startuml
 
-package com.CPS.web.configurations {
+package com.CPS.web {
     class WebSocket {
         +void configureMessageBroker(MessageBrokerRegistry config)
         +void registerStompEndpoints(StompEndpointRegistry registry)
     }
-    WebSocket ..|> WebSocketMessageBrokerConfigurer
-}
 
-package com.CPS.web.controllers {
     class WeatherDataController {
         -IService service
-        +WeatherDataController(IService service)
         +ResponseEntity<?> getWeatherData(String city)
         +String getWeatherPage(String city, Model model)
     }
-}
 
-package com.CPS.web.dto {
     class DTO {
         +String city
         +Long time
@@ -27,34 +21,23 @@ package com.CPS.web.dto {
         +Integer windDirection
         +String location
         +String icon
-        +DTO()
-        +DTO(String city, Long time, Double temperature, Integer humidity, Double windSpeed, Integer windDirection, String location, String icon)
     }
-}
 
-package com.CPS.web.event {
     class WeatherUpdateEvent {
         -DTO weatherData
         +WeatherUpdateEvent(Object source, DTO weatherData)
         +DTO getWeatherData()
     }
-    WeatherUpdateEvent ..|> ApplicationEvent
 
     class WeatherUpdateListener {
         -SimpMessagingTemplate template
-        +WeatherUpdateListener(SimpMessagingTemplate template)
         +void handleWeatherUpdate(WeatherUpdateEvent event)
     }
-}
 
-package com.CPS.web.exceptions {
     class CityNotFoundException {
         +CityNotFoundException(String message)
     }
-    CityNotFoundException ..|> RuntimeException
-}
 
-package com.CPS.web.models {
     class Weather {
         +Long id
         +String city
@@ -66,74 +49,48 @@ package com.CPS.web.models {
         +String location
         +String icon
     }
-}
 
-package com.CPS.web.repository {
-    interface WeatherRepository {
+    class WeatherRepository {
         +List<Weather> findByCity(String city)
         +Optional<Weather> findByCityAndTime(String city, Long time)
     }
-    WeatherRepository ..|> JpaRepository
-}
 
-package com.CPS.web.scheduling {
     class Scheduling {
         -ServiceImpl weatherService
         -SimpMessagingTemplate template
         +void fetchWeatherData()
     }
-}
 
-package com.CPS.web.services.impl {
     class ServiceImpl {
         -WeatherRepository weatherRepository
         -String apiKey
         -String apiURL
         -AtomicReference<String> currentCity
-        -Logger LOGGER
         -ApplicationEventPublisher eventPublisher
-        +ServiceImpl(WeatherRepository weatherRepository, String apiKey, String apiUrl, ApplicationEventPublisher eventPublisher)
         +void fetchAndSaveCityWeather(String cityName)
         +List<DTO> getWeather(String cityName)
         +String getCurrentCity()
-        -void processWeatherResponse(String response, String cityName)
-        -Weather extractWeatherData(JSONObject weatherData, String cityName)
-        -boolean isUpToDate(Weather weatherRecord)
-        -boolean isDataPresent(Weather existingWeather, Weather newWeather)
-        -DTO convertToDTO(Weather weather)
     }
-    ServiceImpl ..|> IService
-}
 
-package com.CPS.web.services {
     interface IService {
         +void fetchAndSaveCityWeather(String city)
         +List<DTO> getWeather(String city)
     }
-}
 
-package com.CPS.web {
-    class WebApplication {
-        -ServiceImpl weatherService
-        +static void main(String[] args)
+    interface JpaRepository {
     }
+
+    IService <|.. ServiceImpl
+    WeatherRepository <|.. JpaRepository
+    WeatherUpdateEvent --> DTO
+    WeatherUpdateListener --> WeatherUpdateEvent
+    ServiceImpl --> WeatherRepository
+    ServiceImpl --> ApplicationEventPublisher
+    Scheduling --> ServiceImpl
+    Scheduling --> SimpMessagingTemplate
+    WeatherUpdateListener --> SimpMessagingTemplate
+    WeatherDataController --> IService : depends on
+    WeatherRepository --> Weather
 }
-
-' Relationships
-ServiceImpl ..> WeatherRepository
-ServiceImpl ..> ApplicationEventPublisher
-ServiceImpl ..> DTO
-ServiceImpl ..> Weather
-ServiceImpl ..> CityNotFoundException
-
-WeatherUpdateListener ..> WeatherUpdateEvent
-
-WeatherDataController ..> IService
-WeatherDataController ..> CityNotFoundException
-WeatherDataController ..> DTO
-WeatherDataController ..> Model
-
-Scheduling ..> ServiceImpl
-Scheduling ..> SimpMessagingTemplate
 
 @enduml
